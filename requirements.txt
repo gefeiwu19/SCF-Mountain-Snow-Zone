@@ -1,0 +1,26 @@
+# Python dependencies for SCF-Mountain-Snow-Zone
+# Install: pip install -r requirements.txt
+#
+# GEE JavaScript scripts (01-03) run in the Code Editor and need no local install.
+# For GEE Python API scripts, authenticate first: earthengine authenticate
+
+# Google Earth Engine
+earthengine-api>=0.1.370
+geemap>=0.30.0
+
+# Geospatial & mapping
+cartopy>=0.22.0
+shapely>=2.0.0
+
+# Scientific computing
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+
+# Statistical tests
+pymannkendall>=1.4.3
+
+# Visualisation
+matplotlib>=3.7.0
+seaborn>=0.12.0
