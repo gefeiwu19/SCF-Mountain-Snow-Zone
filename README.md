@@ -2,7 +2,7 @@
 
 Multi-source satellite snow cover frequency (SCF) mapping and trend analysis for U.S. mountain regions (2018–2024).
 
-**Paper:** *[Title TBD]* — submitted to *GIScience and Remote Sensing*
+**Paper:** *Delineating the Mountain Snow Zone: A Snow Cover Frequency Framework for Characterizing Seasonal Snow Dynamics from Sentinel-2 and Landsat-8* — submitted to *GIScience and Remote Sensing*
 
 **Author:** Gefei Wu · Zhejiang University
 
@@ -143,8 +143,10 @@ See [`data/README.md`](data/README.md) for complete data source documentation, i
 If you use this code, please cite:
 
 ```bibtex
-@article{wu2026scf,
-  title   = {[Title TBD]},
+@article{wu2026snow,
+  title   = {Delineating the Mountain Snow Zone: A Snow Cover Frequency
+             Framework for Characterizing Seasonal Snow Dynamics
+             from Sentinel-2 and Landsat-8},
   author  = {Wu, Gefei},
   journal = {GIScience and Remote Sensing},
   year    = {2026}
