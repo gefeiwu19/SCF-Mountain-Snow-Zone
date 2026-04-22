@@ -91,8 +91,7 @@ MEAN_VIS  = {"min": 0, "max": 80,
 SLOPE_VIS = {"min": -5.0, "max": 5.0,
              "palette": ["#d73027", "#EFEFEF", "#4575b4"]}
 
-OUTPUT_PATH = "./figures/SCF_Combined_4Panel.png"
-os.makedirs("./figures", exist_ok=True)
+OUTPUT_PATH = "./SCF_Combined_4Panel.png"
 
 # =====================================================================
 # 1. Data preparation
@@ -143,7 +142,7 @@ norm_slope = mcolors.TwoSlopeNorm(SLOPE_VIS["min"], 0, SLOPE_VIS["max"])
 # =====================================================================
 # 2. Mountain-range statistics
 # =====================================================================
-print("Computing mountain-range statistics …")
+print("Computing mountain-range statistics ...")
 
 stats_mean  = {}
 stats_trend = {}
@@ -179,7 +178,7 @@ norm_elev = mcolors.Normalize(e_min, e_max)
 # =====================================================================
 # 3. Marginal slope statistics
 # =====================================================================
-print("Computing marginal slope profiles …")
+print("Computing marginal slope profiles ...")
 
 lon_step, lat_step = 1.0, 0.5
 lons = np.arange(LON_MIN, LON_MAX, lon_step)
@@ -218,7 +217,8 @@ rcParams.update({"font.family": "serif", "font.serif": ["Times New Roman"],
                  "font.weight": "bold"})
 proj = ccrs.PlateCarree()
 
-fig = plt.figure(figsize=(18, 28), dpi=300)
+# Use dpi=150 for interactive rendering; savefig uses dpi=300
+fig = plt.figure(figsize=(18, 24), dpi=150)
 
 # Natural Earth country boundaries
 shp = shapereader.natural_earth("50m", "cultural", "admin_0_countries")
@@ -252,12 +252,12 @@ def _add_mountain_boxes(ax, stats_dict):
 
 
 def _capsule_cbar(ax, cmap_, norm_, ticks, label,
-                  rx=0.55, ry=0.08, rw=0.42, rh=0.18):
+                  rx=0.55, ry=0.04, rw=0.42, rh=0.22):
     """Draw a capsule-shaped colour-bar inside the map axes."""
     ax.add_patch(plt.Rectangle((rx, ry), rw, rh, transform=ax.transAxes,
                  facecolor="white", alpha=0.9, edgecolor="#999", lw=1, zorder=15))
     ax_ins = inset_axes(ax, "88%", "15%", loc="lower center",
-                        bbox_to_anchor=(rx, ry + 0.09, rw, rh),
+                        bbox_to_anchor=(rx, ry + 0.14, rw, rh),
                         bbox_transform=ax.transAxes, borderpad=0)
     cb = mcolorbar.ColorbarBase(ax_ins, cmap=cmap_, norm=norm_, orientation="horizontal")
     cb.set_ticks(ticks)
@@ -269,7 +269,7 @@ def _capsule_cbar(ax, cmap_, norm_, ticks, label,
         if isinstance(art, (plt.matplotlib.image.AxesImage,
                             plt.matplotlib.collections.Collection)):
             art.set_clip_path(cap)
-    cb.set_label(label, family="Times New Roman", weight="bold", size=14, labelpad=5)
+    cb.set_label(label, family="Times New Roman", weight="bold", size=14, labelpad=4)
     cb.outline.set_visible(False)
     cb.ax.tick_params(labelsize=12, width=1.2, length=5)
     ax_ins.patch.set_alpha(0)
@@ -290,7 +290,7 @@ def _boxplot_panel(ax, stats_dict, xlabel, title, xlim=None):
         p.set_facecolor(cmap_elev(norm_elev(s["mean_elev"])))
         p.set_alpha(0.85); p.set_edgecolor("#333")
     ax.set_yticks(np.arange(len(names)))
-    ax.set_yticklabels(names)
+    ax.set_yticklabels(names, rotation=30, ha="right", rotation_mode="anchor")
     if xlim is not None:
         ax.set_xlim(xlim)
     ax.set_xlabel(xlabel, fontsize=14, fontweight="bold", family="Times New Roman")
@@ -303,8 +303,9 @@ def _boxplot_panel(ax, stats_dict, xlabel, title, xlim=None):
 
 
 # ====================== Panel (a) ======================
-print("Panel (a) …")
-ax_a = fig.add_axes([0.03, 0.62, 0.60, 0.28], projection=proj)
+print("Panel (a) ...")
+# Wider map axes matching actual implementation
+ax_a = fig.add_axes([0.03, 0.68, 0.68, 0.26], projection=proj)
 cartoee.add_layer(ax_a, final_mean, region=USA_REGION)
 _map_decor(ax_a)
 _add_mountain_boxes(ax_a, stats_mean)
@@ -318,34 +319,27 @@ gl.xlabel_style = gl.ylabel_style = {
 _capsule_cbar(ax_a, cmap_scf, norm_scf, [20, 40, 60],
               "Mean Snow Cover Frequency (%)")
 
-fig.text(0.03, 0.905, "(a)", fontsize=20, fontweight="bold", family="Times New Roman")
-fig.text(0.065, 0.905, "Mean Snow Cover Frequency (2018–2024)",
-         fontsize=16, fontweight="bold", family="Times New Roman")
+# Single-line title (matching actual)
+fig.text(0.03, 0.942, "(a)  Mean Snow Cover Frequency (2018\u20132024)",
+         fontsize=22, fontweight="bold", family="Times New Roman", va="top", ha="left")
 
 fig.canvas.draw()
 pos_a = ax_a.get_position()
-ax_ba = fig.add_axes([pos_a.x1 + 0.06, pos_a.y0, 0.20, pos_a.height])
+# Boxplot gap=0.07, width=0.14 (matching actual)
+ax_ba = fig.add_axes([pos_a.x1 + 0.07, pos_a.y0, 0.14, pos_a.height])
 _boxplot_panel(ax_ba, stats_mean, "SCF (%)", "SCF by Mountain Range", xlim=(0, 70))
 
-# Elevation mini-colorbar for panel (a) boxplot
-ax_el_a = fig.add_axes([pos_a.x1 + 0.06 + 0.20 - 0.08,
-                         pos_a.y0 + pos_a.height - 0.025, 0.07, 0.01])
-cb_el_a = mcolorbar.ColorbarBase(ax_el_a, cmap=cmap_elev, norm=norm_elev,
-                                  orientation="horizontal")
-cb_el_a.set_ticks([int(e_min / 0.9), int((e_min / 0.9 + e_max / 1.1) / 2),
-                   int(e_max / 1.1)])
-cb_el_a.ax.tick_params(labelsize=8, length=3, pad=2)
-cb_el_a.set_label("Elev (m)", fontsize=9, family="Times New Roman", labelpad=2)
-cb_el_a.outline.set_linewidth(0.8)
-
 # ====================== Panel (b) ======================
-print("Panel (b) …")
-ax_b = fig.add_axes([0.05, 0.30, 0.55, 0.25], projection=proj)
+print("Panel (b) ...")
+# Wider map axes matching actual implementation
+ax_b = fig.add_axes([0.05, 0.36, 0.63, 0.24], projection=proj)
 cartoee.add_layer(ax_b, final_trend, region=USA_REGION)
 _map_decor(ax_b)
 _add_mountain_boxes(ax_b, stats_trend)
 
 gl = ax_b.gridlines(draw_labels=True, lw=0.2, color="gray", alpha=0.4, ls=":")
+gl.xlocator = mticker.FixedLocator(np.arange(-180, 181, 10))
+gl.ylocator = mticker.FixedLocator(np.arange(-90, 91, 10))
 gl.top_labels = gl.right_labels = False
 gl.xformatter, gl.yformatter = LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 gl.xlabel_style = gl.ylabel_style = {
@@ -354,9 +348,9 @@ gl.xlabel_style = gl.ylabel_style = {
 _capsule_cbar(ax_b, cmap_slope, norm_slope, [-4, -2, 0, 2, 4],
               "SCF Trend (Slope %/yr)")
 
-fig.text(0.03, 0.585, "(b)", fontsize=20, fontweight="bold", family="Times New Roman")
-fig.text(0.065, 0.585, "SCF Trend (Sen's Slope, 2018–2024)",
-         fontsize=16, fontweight="bold", family="Times New Roman")
+# Single-line title (matching actual)
+fig.text(0.03, 0.655, "(b)  SCF Trend (Sen\u2019s Slope, 2018\u20132024)",
+         fontsize=22, fontweight="bold", family="Times New Roman", va="top", ha="left")
 
 # Marginal profiles
 fig.canvas.draw()
@@ -379,6 +373,7 @@ ax_top.set_ylim(-ya, ya)
 ax_top.set_ylabel("Slope\n(%/yr)", fontsize=11, fontweight="bold")
 ax_top.tick_params(axis="x", labelbottom=False, length=0)
 ax_top.spines["top"].set_visible(False); ax_top.spines["right"].set_visible(False)
+ax_top.set_facecolor("white")
 
 # Right (latitude)
 ax_rt = fig.add_axes([bb.x1 + gap, bb.y0, 0.04, bb.height])
@@ -395,29 +390,34 @@ ax_rt.set_xlim(-xa, xa)
 ax_rt.set_xlabel("Slope\n(%/yr)", fontsize=10, fontweight="bold")
 ax_rt.tick_params(axis="y", labelleft=False, length=0)
 ax_rt.spines["top"].set_visible(False); ax_rt.spines["right"].set_visible(False)
+ax_rt.set_facecolor("white")
 
-# Box plot for trend
+# Box plot for trend — gap=0.07, width=0.12 (matching actual)
 x_max_b = max(abs(stats_trend[n]["p5"]) for n in stats_trend)
 x_max_b = max(x_max_b, max(abs(stats_trend[n]["p95"]) for n in stats_trend)) * 1.2
-ax_bb = fig.add_axes([bb.x1 + gap + 0.04 + 0.04, bb.y0, 0.17, bb.height])
+ax_bb = fig.add_axes([bb.x1 + gap + 0.04 + 0.07, bb.y0, 0.12, bb.height])
 _boxplot_panel(ax_bb, stats_trend, "Trend (%/yr)", "Trend by Mountain Range",
                xlim=(-x_max_b, x_max_b))
 ax_bb.axvline(0, color="#999", lw=1)
 
-# Elevation mini-colorbar for panel (b) boxplot
-ax_el_b = fig.add_axes([bb.x1 + gap + 0.04 + 0.04 + 0.17 - 0.06,
-                         bb.y0 + bb.height - 0.025, 0.07, 0.01])
-cb_el_b = mcolorbar.ColorbarBase(ax_el_b, cmap=cmap_elev, norm=norm_elev,
-                                  orientation="horizontal")
-cb_el_b.set_ticks([int(e_min / 0.9), int((e_min / 0.9 + e_max / 1.1) / 2),
-                   int(e_max / 1.1)])
-cb_el_b.ax.tick_params(labelsize=8, length=3, pad=2)
-cb_el_b.set_label("Elev (m)", fontsize=9, family="Times New Roman", labelpad=2)
-cb_el_b.outline.set_linewidth(0.8)
+# ====================== Shared elevation colorbar ======================
+# Placed in the vertical gap between panel (a) and (b) boxplots
+print("Shared elevation colorbar ...")
+ax_elev_shared = fig.add_axes([0.81, 0.635, 0.11, 0.012])
+cb_el_shared = mcolorbar.ColorbarBase(ax_elev_shared, cmap=cmap_elev, norm=norm_elev,
+                                       orientation="horizontal")
+cb_el_shared.set_ticks([int(e_min / 0.9), int((e_min / 0.9 + e_max / 1.1) / 2),
+                        int(e_max / 1.1)])
+cb_el_shared.ax.tick_params(labelsize=10, length=3, pad=2)
+for lb in cb_el_shared.ax.xaxis.get_ticklabels():
+    lb.set_family("Times New Roman"); lb.set_weight("bold")
+cb_el_shared.set_label("Elevation (m)", fontsize=11, family="Times New Roman",
+                        weight="bold", labelpad=3)
+cb_el_shared.outline.set_linewidth(0.8)
 
 # ====================== Panel (c) — Zoom mean ======================
-print("Panel (c) …")
-ax_c = fig.add_axes([0.05, 0.03, 0.40, 0.22], projection=proj)
+print("Panel (c) ...")
+ax_c = fig.add_axes([0.05, 0.08, 0.40, 0.22], projection=proj)
 cartoee.add_layer(ax_c, final_mean, region=ZOOM_REGION)
 _map_decor(ax_c)
 gl = ax_c.gridlines(draw_labels=True, lw=0.3, color="gray", alpha=0.4, ls=":")
@@ -426,20 +426,19 @@ gl.xformatter, gl.yformatter = LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 gl.xlabel_style = gl.ylabel_style = {
     "size": 12, "color": "#333", "weight": "bold", "family": "Times New Roman"}
 
-ax_cbc = inset_axes(ax_c, "40%", "4%", loc="lower right",
-                     bbox_to_anchor=(0, 0.06, 0.95, 1), bbox_transform=ax_c.transAxes)
+ax_cbc = inset_axes(ax_c, "40%", "4%", loc="lower left",
+                     bbox_to_anchor=(0.05, 0.12, 0.95, 1), bbox_transform=ax_c.transAxes)
 cb_c = mcolorbar.ColorbarBase(ax_cbc, cmap=cmap_scf, norm=norm_scf, orientation="horizontal")
 cb_c.set_ticks([0, 20, 40, 60, 80])
 cb_c.set_label("SCF (%)", fontsize=11, weight="bold", labelpad=3)
 cb_c.ax.tick_params(labelsize=10, length=3)
 
-fig.text(0.05, 0.26, "(c)", fontsize=20, fontweight="bold", family="Times New Roman")
-fig.text(0.085, 0.26, f"Mean SCF — {ZOOM_LABEL}",
-         fontsize=15, fontweight="bold", family="Times New Roman")
+fig.text(0.05, 0.315, f"(c)  Mean SCF \u2014 {ZOOM_LABEL}",
+         fontsize=22, fontweight="bold", family="Times New Roman", va="top", ha="left")
 
 # ====================== Panel (d) — Zoom trend ======================
-print("Panel (d) …")
-ax_d = fig.add_axes([0.52, 0.03, 0.40, 0.22], projection=proj)
+print("Panel (d) ...")
+ax_d = fig.add_axes([0.52, 0.08, 0.40, 0.22], projection=proj)
 cartoee.add_layer(ax_d, final_trend, region=ZOOM_REGION)
 _map_decor(ax_d)
 gl = ax_d.gridlines(draw_labels=True, lw=0.3, color="gray", alpha=0.4, ls=":")
@@ -448,16 +447,15 @@ gl.xformatter, gl.yformatter = LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 gl.xlabel_style = gl.ylabel_style = {
     "size": 12, "color": "#333", "weight": "bold", "family": "Times New Roman"}
 
-ax_dbc = inset_axes(ax_d, "40%", "4%", loc="lower right",
-                     bbox_to_anchor=(0, 0.06, 0.95, 1), bbox_transform=ax_d.transAxes)
+ax_dbc = inset_axes(ax_d, "40%", "4%", loc="lower left",
+                     bbox_to_anchor=(0.05, 0.12, 0.95, 1), bbox_transform=ax_d.transAxes)
 cb_d = mcolorbar.ColorbarBase(ax_dbc, cmap=cmap_slope, norm=norm_slope, orientation="horizontal")
 cb_d.set_ticks([-4, -2, 0, 2, 4])
 cb_d.set_label("Trend (%/yr)", fontsize=11, weight="bold", labelpad=3)
 cb_d.ax.tick_params(labelsize=10, length=3)
 
-fig.text(0.52, 0.26, "(d)", fontsize=20, fontweight="bold", family="Times New Roman")
-fig.text(0.555, 0.26, f"SCF Trend — {ZOOM_LABEL}",
-         fontsize=15, fontweight="bold", family="Times New Roman")
+fig.text(0.52, 0.315, f"(d)  SCF Trend \u2014 {ZOOM_LABEL}",
+         fontsize=22, fontweight="bold", family="Times New Roman", va="top", ha="left")
 
 # ====================== Save ======================
 plt.savefig(OUTPUT_PATH, dpi=300, bbox_inches="tight", facecolor="white")
