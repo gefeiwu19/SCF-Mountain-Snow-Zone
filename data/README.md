@@ -8,7 +8,7 @@ instructions for obtaining them.
 
 | Asset | Description | Source |
 |-------|-------------|--------|
-| `GMBA_USA_clipped` | GMBA Mountain Inventory v2.0, clipped to CONUS | [GMBA](https://ilias.unibe.ch/goto_ilias3_unibe_cat_1000515.html) |
+| `GMBA_USA_clipped` | GMBA Mountain Inventory v1.2, clipped to CONUS | [GMBA](https://ilias.unibe.ch/goto_ilias3_unibe_cat_1000515.html) |
 | `weather_stations` | SNOTEL station point locations | [NRCS SNOTEL](https://www.nrcs.usda.gov/wps/portal/wcc/home/snowClimateMonitoring/snowpack/snotelSiteData/) |
 | `SCF_Fishnet` | Fishnet grid clipped to GMBA extent | Generated in GIS preprocessing |
 
